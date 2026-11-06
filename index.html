@@ -204,7 +204,7 @@
   const tint = (n) => `var(${TINTS[negocios.indexOf(n) % TINTS.length]})`;
 
   // Stock en vivo: estado de cada unidad leído de la hoja Outlet (Apps Script). Si falla, queda el snapshot del día.
-  const ESTADO_URL = 'https://script.google.com/macros/s/AKfycbw5FdOKcUX2GtSqemiKC_RBgTfIGFifnbI1Ode4njrcBD0KMEbRCAelEs6DQ50PQVd-_w/exec';
+  const ESTADO_URL = 'https://script.google.com/macros/s/AKfycbz_3Zus7VkUZukV8YhlMQEdoUbELgquCsBG8xP2dDfrMclk_Q3UVK71oHQfXbsBb07Rhw/exec';
   let VIVO = null, VIVO_HORA = null;
   const BASE = DATA.productos;
   const preparar = () => {
@@ -320,6 +320,7 @@
       const meliUrl = p.mla ? `https://articulo.mercadolibre.com.ar/${p.mla.replace('MLA', 'MLA-')}` : '';
       const msg = (res ? `Hola! Vi que la unidad ${u.code} de ${p.nombre} (${p.sku}) está reservada. Si se libera, me avisás?` : `Hola! Quiero comprar del Outlet: ${p.nombre} (${p.sku}), unidad ${u.code}${precio ? ', precio Outlet ' + ars.format(precio.valor) : ''}. ¿Sigue disponible?`) + (meliUrl ? `\n\nPublicación en MercadoLibre para comparar${p.meli ? ' (' + ars.format(p.meli) + ')' : ''}: ${meliUrl}` : '');
       const a = el('a', 'wa'); a.href = `https://wa.me/${WA}?text=${encodeURIComponent(msg)}`; a.target = '_blank'; a.rel = 'noopener'; a.innerHTML = WA_ICON; a.append(document.createTextNode(res ? 'Reservada · avisame si se libera' : 'Lo quiero por WhatsApp'));
+      if (!res) a.addEventListener('click', () => reservar(p, u));
       row.append(d, pv);
       if (u.fotos && u.fotos.length) {
         const r = el('button', 'real'); r.type = 'button'; r.innerHTML = CAM_ICON;
@@ -351,8 +352,14 @@
     const libres = list.reduce((s, p) => s + p.libres, 0);
     document.getElementById('count').textContent = `${list.length} ${list.length === 1 ? 'producto' : 'productos'} · ${libres} ${libres === 1 ? 'unidad disponible' : 'unidades disponibles'}` + (VIVO ? ` · stock en vivo ${VIVO_HORA}` : ' · verificando stock…');
   };
-  render();
-  (async () => {
+  // Al tocar "Lo quiero por WhatsApp": reserva automática en la hoja (columna RESERVA WEB, vence sola) y refresco del stock.
+  const reservar = (p, u) => {
+    try { fetch(`${ESTADO_URL}?reservar=${encodeURIComponent(u.code)}&sku=${encodeURIComponent(p.sku)}`, { mode: 'no-cors', keepalive: true }); } catch (e) {}
+    VIVO = VIVO || {}; VIVO[u.code] = { sku: p.sku, destino: 'RESERVADO' };
+    setTimeout(() => { preparar(); render(); }, 600);
+    setTimeout(refrescar, 4000);
+  };
+  const refrescar = async () => {
     const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 9000);
     try {
       const r = await fetch(ESTADO_URL, { signal: ctl.signal, cache: 'no-store' });
@@ -361,9 +368,12 @@
       VIVO = j.estados; VIVO_HORA = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
       preparar(); render();
     } catch (e) {
-      document.getElementById('count').textContent = document.getElementById('count').textContent.replace(' · verificando stock…', '');
+      const c = document.getElementById('count'); c.textContent = c.textContent.replace(' · verificando stock…', '');
     } finally { clearTimeout(to); }
-  })();
+  };
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') refrescar(); });
+  render();
+  refrescar();
 </script>
 
 </body>
