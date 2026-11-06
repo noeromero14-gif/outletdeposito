@@ -109,6 +109,10 @@
   .real svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
   .real small { font-weight: 600; color: var(--muted); }
   .hasreal { position: absolute; left: 10px; bottom: 10px; z-index: 1; font-size: 12.5px; font-weight: 800; padding: 5px 11px; border-radius: 999px; background: var(--mint); color: var(--ink); }
+  .unit.res { opacity: .78; }
+  .unit.res .wa { background: var(--muted); }
+  .rpill { display: inline-block; margin-left: 8px; font-family: var(--f-body); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; padding: 1px 8px; border-radius: 999px; background: var(--peach); color: var(--ink); }
+  .price .left.allres { background: var(--peach); }
   .wa { grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; font-weight: 700; background: var(--wa); color: var(--wa-ink); border-radius: 10px; padding: 9px 12px; }
   .wa svg { width: 18px; height: 18px; fill: currentColor; }
   .more { font: inherit; font-size: 13px; font-weight: 700; background: transparent; border: 0; color: var(--accent); cursor: pointer; justify-self: start; padding: 0; }
@@ -169,7 +173,7 @@
 </main>
 
 <footer class="wrap">
-  <p>Stock actualizado al <span id="upd"></span>. Si una unidad ya se vendió te avisamos por WhatsApp.</p>
+  <p>Catálogo actualizado al <span id="upd"></span>. Lo vendido y reservado se actualiza en vivo; si justo se vendió, te avisamos por WhatsApp.</p>
   <p>El precio de referencia es el promedio al que se vendió el mismo producto nuevo en MercadoLibre en octubre de 2026. Cada producto tiene el link a su publicación para comparar.</p>
 </footer>
 
@@ -199,15 +203,31 @@
   const negocios = [...new Set(DATA.productos.map((p) => p.negocio).filter(Boolean))].sort();
   const tint = (n) => `var(${TINTS[negocios.indexOf(n) % TINTS.length]})`;
 
-  for (const p of DATA.productos) {
-    p.precios = p.unidades.map((u) => precioUnidad(p, u));
-    const vals = p.precios.filter(Boolean).map((x) => x.valor);
-    p.desde = vals.length ? Math.min(...vals) : null;
-    p.ref = p.meli || p.lista || null;
-    p.refLbl = p.meli ? 'En MercadoLibre' : 'Precio de lista';
-    p.ahorro = p.ref && p.desde ? 1 - p.desde / p.ref : 0;
-    p.ultimo = p.unidades.map((u) => u.ingreso).sort().pop();
-  }
+  // Stock en vivo: estado de cada unidad leído de la hoja Outlet (Apps Script). Si falla, queda el snapshot del día.
+  const ESTADO_URL = 'https://script.google.com/macros/s/AKfycbwfhsx7pmNMD0d-Lwijo5hptd0XyGNYpNIKQvEXUZFLGw2IeqNIE8s5NHP0vueN85pEdA/exec';
+  let VIVO = null, VIVO_HORA = null;
+  const BASE = DATA.productos;
+  const preparar = () => {
+    DATA.productos = BASE.map((p0) => {
+      const unidades = p0.unidades.map((u) => {
+        const e = VIVO && VIVO[u.code];
+        const destino = e && e.sku === p0.sku ? String(e.destino || '').toUpperCase() : 'PENDIENTE';
+        return { ...u, destino };
+      }).filter((u) => u.destino !== 'VENDIDO');
+      if (!unidades.length) return null;
+      const p = { ...p0, unidades };
+      p.precios = p.unidades.map((u) => precioUnidad(p, u));
+      p.libres = p.unidades.filter((u) => u.destino !== 'RESERVADO').length;
+      const vals = p.precios.filter((x, i) => x && (!p.libres || p.unidades[i].destino !== 'RESERVADO')).map((x) => x.valor);
+      p.desde = vals.length ? Math.min(...vals) : null;
+      p.ref = p.meli || p.lista || null;
+      p.refLbl = p.meli ? 'En MercadoLibre' : 'Precio de lista';
+      p.ahorro = p.ref && p.desde ? 1 - p.desde / p.ref : 0;
+      p.ultimo = p.unidades.map((u) => u.ingreso).sort().pop();
+      return p;
+    }).filter(Boolean);
+  };
+  preparar();
 
   document.getElementById('upd').textContent = fecha(DATA.actualizado);
   const copyBtn = document.getElementById('copy-wa');
@@ -282,22 +302,24 @@
       pr.append(el('span', 'now' + (conRef ? ' hot' : ''), (p.precios.filter(Boolean).some((x) => x.valor !== p.desde) ? 'desde ' : '') + ars.format(p.desde)));
       if (conRef) pr.append(el('span', 'save', 'Ahorrás ' + ars.format(p.ref - p.desde)));
     } else pr.append(el('span', 'now', 'Consultar'));
-    pr.append(el('span', 'left', p.unidades.length === 1 ? 'Queda 1' : `Quedan ${p.unidades.length}`));
+    pr.append(el('span', 'left' + (p.libres ? '' : ' allres'), !p.libres ? 'Reservado' : p.libres === 1 ? 'Queda 1' : `Quedan ${p.libres}`));
     art.append(pr);
 
     const ul = el('div', 'units');
     const abierto = state.abiertos.has(p.sku);
-    const orden = p.unidades.slice().sort((x, y) => (y.fotos?.length ? 1 : 0) - (x.fotos?.length ? 1 : 0));
+    const rank = (u) => (u.destino === 'RESERVADO' ? 2 : 0) + (u.fotos?.length ? 0 : 1);
+    const orden = p.unidades.slice().sort((x, y) => rank(x) - rank(y));
     const visibles = abierto ? orden : orden.slice(0, 2);
     visibles.forEach((u) => {
       const i = p.unidades.indexOf(u), precio = p.precios[i];
-      const row = el('div', 'unit');
-      const d = el('div', 'd'); d.append(el('b', null, u.code), document.createTextNode(u.detalle || 'Sin detalle registrado: consultanos'));
+      const res = u.destino === 'RESERVADO';
+      const row = el('div', 'unit' + (res ? ' res' : ''));
+      const d = el('div', 'd'); const cb = el('b', null, u.code); if (res) cb.append(el('span', 'rpill', 'Reservada')); d.append(cb, document.createTextNode(u.detalle || 'Sin detalle registrado: consultanos'));
       const pv = el('div', 'p', precio ? ars.format(precio.valor) : 'Consultar');
       if (precio && precio.rebaja) pv.append(el('small', null, '−10% por antigüedad'));
       const meliUrl = p.mla ? `https://articulo.mercadolibre.com.ar/${p.mla.replace('MLA', 'MLA-')}` : '';
-      const msg = `Hola! Quiero comprar del Outlet: ${p.nombre} (${p.sku}), unidad ${u.code}${precio ? ', precio Outlet ' + ars.format(precio.valor) : ''}. ¿Sigue disponible?` + (meliUrl ? `\n\nPublicación en MercadoLibre para comparar${p.meli ? ' (' + ars.format(p.meli) + ')' : ''}: ${meliUrl}` : '');
-      const a = el('a', 'wa'); a.href = `https://wa.me/${WA}?text=${encodeURIComponent(msg)}`; a.target = '_blank'; a.rel = 'noopener'; a.innerHTML = WA_ICON; a.append(document.createTextNode('Lo quiero por WhatsApp'));
+      const msg = (res ? `Hola! Vi que la unidad ${u.code} de ${p.nombre} (${p.sku}) está reservada. Si se libera, me avisás?` : `Hola! Quiero comprar del Outlet: ${p.nombre} (${p.sku}), unidad ${u.code}${precio ? ', precio Outlet ' + ars.format(precio.valor) : ''}. ¿Sigue disponible?`) + (meliUrl ? `\n\nPublicación en MercadoLibre para comparar${p.meli ? ' (' + ars.format(p.meli) + ')' : ''}: ${meliUrl}` : '');
+      const a = el('a', 'wa'); a.href = `https://wa.me/${WA}?text=${encodeURIComponent(msg)}`; a.target = '_blank'; a.rel = 'noopener'; a.innerHTML = WA_ICON; a.append(document.createTextNode(res ? 'Reservada · avisame si se libera' : 'Lo quiero por WhatsApp'));
       row.append(d, pv);
       if (u.fotos && u.fotos.length) {
         const r = el('button', 'real'); r.type = 'button'; r.innerHTML = CAM_ICON;
@@ -326,9 +348,22 @@
     const grid = document.getElementById('grid'); grid.replaceChildren(...list.map(card));
     document.getElementById('empty').hidden = list.length > 0;
     const u = list.reduce((s, p) => s + p.unidades.length, 0);
-    document.getElementById('count').textContent = `${list.length} productos · ${u} unidades disponibles`;
+    const libres = list.reduce((s, p) => s + p.libres, 0);
+    document.getElementById('count').textContent = `${list.length} ${list.length === 1 ? 'producto' : 'productos'} · ${libres} ${libres === 1 ? 'unidad disponible' : 'unidades disponibles'}` + (VIVO ? ` · stock en vivo ${VIVO_HORA}` : ' · verificando stock…');
   };
   render();
+  (async () => {
+    const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 9000);
+    try {
+      const r = await fetch(ESTADO_URL, { signal: ctl.signal, cache: 'no-store' });
+      const j = await r.json();
+      if (!j || !j.estados) throw new Error('sin datos');
+      VIVO = j.estados; VIVO_HORA = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+      preparar(); render();
+    } catch (e) {
+      document.getElementById('count').textContent = document.getElementById('count').textContent.replace(' · verificando stock…', '');
+    } finally { clearTimeout(to); }
+  })();
 </script>
 
 </body>
