@@ -1,0 +1,39 @@
+name: Actualizar página Outlet
+
+on:
+  schedule:
+    - cron: '7 11-23 * * *'   # cada hora, de 8:07 a 20:07 (hora Argentina)
+  workflow_dispatch: {}        # botón "Run workflow" para correrlo a mano
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: actualizar-outlet
+  cancel-in-progress: false
+
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pillow
+      - run: python3 kit/actualizar.py
+      - name: Publicar si hay cambios
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "Claude"
+          git config user.email "noreply@anthropic.com"
+          git add index.html reales kit/catalog.json kit/reales.json
+          if git diff --cached --quiet; then
+            echo "Sin cambios."
+          else
+            git commit -m "Actualización automática $(TZ=America/Buenos_Aires date '+%Y-%m-%d %H:%M')"
+            git push
+            gh api -X POST "repos/${GITHUB_REPOSITORY}/pages/builds" || true
+          fi

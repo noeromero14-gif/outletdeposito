@@ -1,0 +1,370 @@
+<title>Outlet de Depósito</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+  /* Layout: a pegboard of hanging price tags — each product is a tag card; the honest defect note is the hero detail. */
+  :root {
+    --bg: #FBF7F4; --paper: #FFFFFF; --ink: #3A2A3F; --muted: #7C6C80; --line: #EADFE6;
+    --blush: #F7C6D3; --mint: #BFE8D6; --butter: #FBE6A6; --lilac: #D9CCF5; --sky: #C6DFF6; --peach: #FAD3BE;
+    --accent: #D94F86; --accent-ink: #FFFFFF; --wa: #25A55F; --wa-ink: #FFFFFF; --sale: #2E8B66; --sale-bg: #D6F2E4; --sale-ink: #1E6B4C;
+    --f-display: "Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+    --f-body: "Nunito Sans", "Segoe UI", system-ui, sans-serif;
+    --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+    --r: 18px;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg: #1F1823; --paper: #2A2130; --ink: #F5ECF3; --muted: #BBAABF; --line: #3E3245;
+    --blush: #6B3A4E; --mint: #2F5C4C; --butter: #5E5130; --lilac: #47406A; --sky: #304D66; --peach: #6A4636;
+    --accent: #F28AB3; --accent-ink: #2A1420; --wa: #3DC97A; --wa-ink: #0E2418; --sale: #7FD6AF; --sale-bg: #1F4A39; --sale-ink: #A8EBCB; color-scheme: dark; } }
+  :root[data-theme="dark"] {
+    --bg: #1F1823; --paper: #2A2130; --ink: #F5ECF3; --muted: #BBAABF; --line: #3E3245;
+    --blush: #6B3A4E; --mint: #2F5C4C; --butter: #5E5130; --lilac: #47406A; --sky: #304D66; --peach: #6A4636;
+    --accent: #F28AB3; --accent-ink: #2A1420; --wa: #3DC97A; --wa-ink: #0E2418; --sale: #7FD6AF; --sale-bg: #1F4A39; --sale-ink: #A8EBCB; color-scheme: dark; }
+
+  body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  a { color: inherit; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+
+  header.hero { padding-block: 40px 28px; display: grid; gap: 18px; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); align-items: end; }
+  .kicker { font-family: var(--f-mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  h1 { font-family: var(--f-display); font-weight: 800; font-size: clamp(2.4rem, 6vw, 4.2rem); line-height: .98; margin: 8px 0 12px; text-wrap: balance; letter-spacing: -.02em; }
+  h1 em { font-style: normal; background: var(--butter); padding: 0 .18em; border-radius: 10px; }
+  .lede { max-width: 58ch; margin: 0; font-size: 1.05rem; color: var(--muted); }
+  .how { display: grid; gap: 10px; background: var(--paper); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; }
+  .how h2 { font-family: var(--f-display); font-size: 1.05rem; margin: 0; }
+  .how ol { margin: 0; padding-left: 1.2rem; display: grid; gap: 4px; }
+  .how .num { font-family: var(--f-mono); font-size: 13px; }
+  .copy { font: inherit; font-size: 12px; border: 1px solid var(--line); background: transparent; color: var(--ink); border-radius: 999px; padding: 2px 10px; cursor: pointer; margin-left: 6px; }
+
+  .bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); }
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+  .bar .wrap { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding-block: 12px; }
+  .search { flex: 1 1 220px; min-width: 0; font: inherit; padding: 10px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { font: inherit; font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); cursor: pointer; }
+  .chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  select.sort { font: inherit; font-size: 13px; padding: 8px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); }
+  .count { font-family: var(--f-mono); font-size: 12px; color: var(--muted); width: 100%; }
+
+  main { padding-block: 22px 60px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 18px; align-items: start; }
+  .tag { background: var(--paper); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; display: grid; min-width: 0; }
+  .ph { aspect-ratio: 4 / 3; max-width: 100%; display: grid; place-items: center; overflow: hidden; background: #FFFFFF; border-bottom: 1px solid var(--line); }
+  .ph img { width: 100%; height: 100%; object-fit: contain; }
+  .ph img { cursor: zoom-in; }
+  .zoom { position: absolute; right: 10px; bottom: 10px; z-index: 1; display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 13px; font-weight: 700; padding: 6px 12px; border-radius: 999px; border: 0; background: rgba(58, 42, 63, .78); color: #fff; cursor: pointer; }
+  .zoom svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.2; }
+  dialog.lb { width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; background: rgba(20, 14, 22, .96); color: #fff; }
+  dialog.lb::backdrop { background: rgba(20, 14, 22, .96); }
+  .lb .stage { position: absolute; inset: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; padding: max(12px, env(safe-area-inset-top, 0px)) 12px max(12px, env(safe-area-inset-bottom, 0px)); gap: 10px; }
+  .lb .head { display: flex; align-items: center; gap: 12px; }
+  .lb .cap { flex: 1; min-width: 0; font-family: var(--f-display); font-weight: 700; font-size: 1.05rem; line-height: 1.2; }
+  .lb .x, .lb .nav { font: inherit; border: 0; cursor: pointer; background: rgba(255, 255, 255, .14); color: #fff; border-radius: 999px; display: grid; place-items: center; }
+  .lb .x { width: 44px; height: 44px; font-size: 26px; line-height: 1; flex: none; }
+  .lb .view { min-height: 0; display: grid; place-items: center; }
+  .lb .view img { max-width: 100%; max-height: 100%; object-fit: contain; background: #fff; border-radius: 10px; }
+  .lb .foot { display: flex; align-items: center; justify-content: center; gap: 14px; min-height: 44px; }
+  .lb .nav { width: 48px; height: 44px; font-size: 22px; }
+  .lb .nav[hidden] { display: none; }
+  .lb .n { font-family: var(--f-mono); font-size: 13px; opacity: .8; }
+  .ph.none { background: var(--tint); color: var(--ink); text-align: center; padding: 18px; gap: 6px; align-content: center; }
+  .ph.none .ini { font-family: var(--f-display); font-weight: 800; font-size: 2.6rem; opacity: .55; line-height: 1; }
+  .ph.none .msg { font-size: 12.5px; font-weight: 600; max-width: 26ch; }
+  .tag .top { position: relative; padding: 18px 18px 14px; display: grid; gap: 6px; }
+  .tag .top::after { content: ""; position: absolute; top: 14px; right: 18px; width: 14px; height: 14px; border-radius: 50%; background: var(--bg); border: 2px solid var(--line); }
+  .tag .cat { font-family: var(--f-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink); justify-self: start; padding: 3px 9px; border-radius: 999px; }
+  .tag h3 { font-family: var(--f-display); font-weight: 700; font-size: 1.22rem; line-height: 1.15; margin: 4px 28px 0 0; text-wrap: balance; }
+  .ficha { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; font-size: 13px; margin: 6px 0 0; }
+  .ficha dt { color: var(--muted); } .ficha dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+  .specs { margin: 8px 0 0; padding-left: 1.1rem; font-size: 13px; display: grid; gap: 2px; color: var(--ink); }
+  .specs li::marker { color: var(--accent); }
+  .price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; padding: 12px 18px; border-top: 1px dashed var(--line); }
+  .price .now { font-family: var(--f-display); font-weight: 800; font-size: 1.9rem; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+  .price .ref { width: 100%; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .price .ref .lbl { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .price .was { font-family: var(--f-display); font-weight: 700; font-size: 1.25rem; color: var(--muted); text-decoration: line-through; text-decoration-color: var(--accent); text-decoration-thickness: 3px; font-variant-numeric: tabular-nums; }
+  .price .now.hot { color: var(--accent); font-size: 2.3rem; }
+  .price .save { font-weight: 800; font-size: 14px; background: var(--sale-bg); color: var(--sale-ink); padding: 4px 12px; border-radius: 999px; font-variant-numeric: tabular-nums; }
+  .ph { position: relative; }
+  .badge { position: absolute; top: 12px; left: 12px; z-index: 1; display: grid; place-items: center; text-align: center; width: 96px; height: 96px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); transform: rotate(-10deg); box-shadow: 0 8px 20px -8px rgba(217, 79, 134, .7); line-height: 1; }
+  .badge b { font-family: var(--f-display); font-weight: 800; font-size: 1.45rem; letter-spacing: -.02em; }
+  .badge small { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-top: 3px; }
+  .price .left { margin-left: auto; font-size: 13px; font-weight: 700; background: var(--butter); padding: 2px 10px; border-radius: 999px; }
+  .units { display: grid; gap: 8px; padding: 0 18px 16px; }
+  .unit { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; align-items: center; padding: 10px 12px; border-radius: 12px; background: var(--bg); }
+  .unit .d { font-size: 13.5px; } .unit .d b { display: block; font-size: 12px; font-family: var(--f-mono); font-weight: 500; color: var(--muted); }
+  .unit .p { font-weight: 700; font-variant-numeric: tabular-nums; font-size: 14px; }
+  .unit .p small { display: block; font-weight: 600; color: var(--sale); font-size: 11px; }
+  .real { grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 8px; font: inherit; font-weight: 700; cursor: pointer; background: var(--paper); color: var(--ink); border: 2px solid var(--ink); border-radius: 10px; padding: 8px 12px; }
+  .real svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
+  .real small { font-weight: 600; color: var(--muted); }
+  .hasreal { position: absolute; left: 10px; bottom: 10px; z-index: 1; font-size: 12.5px; font-weight: 800; padding: 5px 11px; border-radius: 999px; background: var(--mint); color: var(--ink); }
+  .unit.res { opacity: .78; }
+  .unit.res .wa { background: var(--muted); }
+  .rpill { display: inline-block; margin-left: 8px; font-family: var(--f-body); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; padding: 1px 8px; border-radius: 999px; background: var(--peach); color: var(--ink); }
+  .price .left.allres { background: var(--peach); }
+  .wa { grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; font-weight: 700; background: var(--wa); color: var(--wa-ink); border-radius: 10px; padding: 9px 12px; }
+  .wa svg { width: 18px; height: 18px; fill: currentColor; }
+  .more { font: inherit; font-size: 13px; font-weight: 700; background: transparent; border: 0; color: var(--accent); cursor: pointer; justify-self: start; padding: 0; }
+  .meli { display: block; padding: 12px 18px; border-top: 1px solid var(--line); font-size: 13px; font-weight: 600; text-decoration: none; color: var(--accent); }
+  .empty { text-align: center; color: var(--muted); padding: 60px 0; }
+  footer { border-top: 1px solid var(--line); padding-block: 24px 40px; color: var(--muted); font-size: 13px; }
+  footer p { max-width: 70ch; margin: 0 0 6px; }
+
+  @media (max-width: 760px) { header.hero { grid-template-columns: 1fr; padding-block: 28px 20px; } .chips { flex-wrap: nowrap; overflow-x: auto; width: 100%; padding-bottom: 2px; scrollbar-width: none; } .chip { flex: none; } .search { flex-basis: 100%; } }
+  @media (max-width: 760px) {
+    body { font-size: 16.5px; }
+    .lede { font-size: 1.1rem; } .how ol, .how div { font-size: 16px; }
+    .tag h3 { font-size: 1.4rem; } .tag .cat { font-size: 12px; }
+    .ficha, .specs { font-size: 15.5px; gap: 4px 12px; }
+    .unit .d { font-size: 15.5px; } .unit .d b { font-size: 13px; } .unit .p { font-size: 16px; } .unit .p small { font-size: 12.5px; }
+    .wa, .real { font-size: 16.5px; padding: 12px 14px; } .wa svg, .real svg { width: 22px; height: 22px; } .hasreal { font-size: 14px; }
+    .price .ref .lbl { font-size: 13px; } .price .save { font-size: 15.5px; } .price .left { font-size: 14.5px; }
+    .meli, .more { font-size: 15px; } .chip, select.sort { font-size: 15px; } .search { font-size: 16px; }
+    .count { font-size: 13px; } footer { font-size: 15px; } .ph.none .msg { font-size: 14px; }
+  }
+  @media (prefers-reduced-motion: no-preference) { .tag { transition: transform .2s ease, box-shadow .2s ease; } .tag:hover { transform: translateY(-2px); box-shadow: 0 10px 28px -18px rgba(58, 42, 63, .45); } }
+</style>
+
+<header class="wrap hero">
+  <div>
+    <div class="kicker">Outlet · Stock limitado</div>
+    <h1>Productos con detalles a <em>precio outlet</em></h1>
+    <p class="lede">Devoluciones revisadas: funcionan, pero tienen la caja rota, una marca de uso o les falta algún accesorio. Cada unidad dice exactamente qué tiene. Las que llevan más de 30 días en el Outlet bajan un 10%.</p>
+  </div>
+  <aside class="how" aria-label="Cómo comprar">
+    <h2>Cómo comprar</h2>
+    <ol>
+      <li>Elegí la unidad y leé su detalle.</li>
+      <li>Tocá <b>Lo quiero por WhatsApp</b>: se abre el chat con el mensaje armado y el link de MercadoLibre para comparar.</li>
+      <li>Coordinamos pago y retiro por ahí.</li>
+    </ol>
+    <div>WhatsApp: <span class="num" id="wa-num">11 3455-0868</span><button class="copy" id="copy-wa" type="button">Copiar</button></div>
+  </aside>
+</header>
+
+<div class="bar">
+  <div class="wrap">
+    <input class="search" id="q" type="search" placeholder="Buscar: olla, horno, Singer…" aria-label="Buscar producto">
+    <select class="sort" id="sort" aria-label="Ordenar">
+      <option value="nuevo">Más recientes</option>
+      <option value="precio-asc">Menor precio</option>
+      <option value="precio-desc">Mayor precio</option>
+      <option value="ahorro">Mayor ahorro</option>
+    </select>
+    <div class="chips" id="chips" role="group" aria-label="Filtrar por rubro"></div>
+    <div class="count" id="count"></div>
+  </div>
+</div>
+
+<main class="wrap">
+  <div class="grid" id="grid"></div>
+  <p class="empty" id="empty" hidden>No hay productos con ese filtro.</p>
+</main>
+
+<footer class="wrap">
+  <p>Catálogo actualizado al <span id="upd"></span>. Lo vendido y reservado se actualiza en vivo; si justo se vendió, te avisamos por WhatsApp.</p>
+  <p>El precio de referencia es el promedio al que se vendió el mismo producto nuevo en MercadoLibre en octubre de 2026. Cada producto tiene el link a su publicación para comparar.</p>
+</footer>
+
+<dialog class="lb" id="lb" aria-label="Foto completa">
+  <div class="stage">
+    <div class="head"><div class="cap" id="lb-cap"></div><button class="x" id="lb-x" type="button" aria-label="Cerrar">×</button></div>
+    <div class="view" id="lb-view"><img id="lb-img" alt=""></div>
+    <div class="foot"><button class="nav" id="lb-prev" type="button" aria-label="Foto anterior">‹</button><span class="n" id="lb-n"></span><button class="nav" id="lb-next" type="button" aria-label="Foto siguiente">›</button></div>
+  </div>
+</dialog>
+<script>
+  const DATA = __DATA__;
+  const WA = '5491134550868';
+  const DIAS_REBAJA = 30, REBAJA = 0.10;
+  const HOY = new Date();
+
+  const ars = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
+  const pct = new Intl.NumberFormat('es-AR', { style: 'percent', maximumFractionDigits: 0 });
+  const fecha = (iso) => iso.split('-').reverse().join('/');
+  const dias = (iso) => Math.floor((HOY - new Date(iso + 'T12:00:00')) / 864e5);
+  const precioUnidad = (p, u) => {
+    if (!p.costo) return null;
+    const rebaja = dias(u.ingreso) > DIAS_REBAJA;
+    return { valor: Math.round(p.costo * (rebaja ? 1 - REBAJA : 1) / 100) * 100, rebaja };
+  };
+  const TINTS = ['--mint', '--blush', '--butter', '--lilac', '--sky', '--peach'];
+  const negocios = [...new Set(DATA.productos.map((p) => p.negocio).filter(Boolean))].sort();
+  const tint = (n) => `var(${TINTS[negocios.indexOf(n) % TINTS.length]})`;
+
+  // Stock en vivo: estado de cada unidad leído de la hoja Outlet (Apps Script). Si falla, queda el snapshot del día.
+  const ESTADO_URL = 'https://script.google.com/macros/s/AKfycbz_3Zus7VkUZukV8YhlMQEdoUbELgquCsBG8xP2dDfrMclk_Q3UVK71oHQfXbsBb07Rhw/exec';
+  let VIVO = null, VIVO_HORA = null;
+  const BASE = DATA.productos;
+  const preparar = () => {
+    DATA.productos = BASE.map((p0) => {
+      const unidades = p0.unidades.map((u) => {
+        const e = VIVO && VIVO[u.code];
+        const destino = e && e.sku === p0.sku ? String(e.destino || '').toUpperCase() : 'PENDIENTE';
+        return { ...u, destino };
+      }).filter((u) => u.destino !== 'VENDIDO');
+      if (!unidades.length) return null;
+      const p = { ...p0, unidades };
+      p.precios = p.unidades.map((u) => precioUnidad(p, u));
+      p.libres = p.unidades.filter((u) => u.destino !== 'RESERVADO').length;
+      const vals = p.precios.filter((x, i) => x && (!p.libres || p.unidades[i].destino !== 'RESERVADO')).map((x) => x.valor);
+      p.desde = vals.length ? Math.min(...vals) : null;
+      p.ref = p.meli || p.lista || null;
+      p.refLbl = p.meli ? 'En MercadoLibre' : 'Precio de lista';
+      p.ahorro = p.ref && p.desde ? 1 - p.desde / p.ref : 0;
+      p.ultimo = p.unidades.map((u) => u.ingreso).sort().pop();
+      return p;
+    }).filter(Boolean);
+  };
+  preparar();
+
+  document.getElementById('upd').textContent = fecha(DATA.actualizado);
+  const copyBtn = document.getElementById('copy-wa');
+  copyBtn.addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText('1134550868'); copyBtn.textContent = 'Copiado'; }
+    catch { const r = document.createRange(); r.selectNodeContents(document.getElementById('wa-num')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); copyBtn.textContent = 'Seleccionado'; }
+    setTimeout(() => { copyBtn.textContent = 'Copiar'; }, 1800);
+  });
+
+  const state = { q: '', negocio: '', sort: 'nuevo', abiertos: new Set() };
+  const chips = document.getElementById('chips');
+  const mkChip = (label, val) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = label; b.dataset.val = val; b.setAttribute('aria-pressed', String(state.negocio === val)); b.addEventListener('click', () => { state.negocio = val; render(); }); return b; };
+  const drawChips = () => { chips.replaceChildren(mkChip('Todo', ''), ...negocios.map((n) => mkChip(n, n))); };
+  document.getElementById('q').addEventListener('input', (e) => { state.q = e.target.value.toLowerCase(); render(); });
+  document.getElementById('sort').addEventListener('change', (e) => { state.sort = e.target.value; render(); });
+
+  const WA_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.04 2a9.9 9.9 0 0 0-8.5 15l-1.4 5 5.1-1.3A9.9 9.9 0 1 0 12.04 2Zm0 18.1a8.2 8.2 0 0 1-4.2-1.1l-.3-.2-3 .8.8-2.9-.2-.3a8.2 8.2 0 1 1 6.9 3.7Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.4.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.4-.3Z"/></svg>';
+
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+
+  const ZOOM_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>';
+  const CAM_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>';
+  const lb = document.getElementById('lb'), lbImg = document.getElementById('lb-img');
+  const LB = { fotos: [], i: 0, cap: '' };
+  const lbShow = () => {
+    lbImg.src = LB.fotos[LB.i]; lbImg.alt = LB.cap;
+    document.getElementById('lb-cap').textContent = LB.cap;
+    const many = LB.fotos.length > 1;
+    document.getElementById('lb-prev').hidden = !many; document.getElementById('lb-next').hidden = !many;
+    document.getElementById('lb-n').textContent = many ? `${LB.i + 1} / ${LB.fotos.length}` : 'Tocá afuera o la × para cerrar';
+  };
+  const abrirFoto = (fotos, i, cap) => { LB.fotos = fotos; LB.i = i || 0; LB.cap = cap; lbShow(); if (lb.showModal) lb.showModal(); else lb.setAttribute('open', ''); };
+  const step = (d) => { LB.i = (LB.i + d + LB.fotos.length) % LB.fotos.length; lbShow(); };
+  const cerrar = () => { if (lb.close) lb.close(); else lb.removeAttribute('open'); };
+  document.getElementById('lb-x').addEventListener('click', cerrar);
+  document.getElementById('lb-prev').addEventListener('click', () => step(-1));
+  document.getElementById('lb-next').addEventListener('click', () => step(1));
+  document.getElementById('lb-view').addEventListener('click', (e) => { if (e.target !== lbImg) cerrar(); });
+  lb.addEventListener('keydown', (e) => { if (e.key === 'ArrowLeft') step(-1); if (e.key === 'ArrowRight') step(1); });
+  let tx = null;
+  lb.addEventListener('touchstart', (e) => { tx = e.touches[0].clientX; }, { passive: true });
+  lb.addEventListener('touchend', (e) => { if (tx == null || LB.fotos.length < 2) return; const dx = e.changedTouches[0].clientX - tx; if (Math.abs(dx) > 50) step(dx < 0 ? 1 : -1); tx = null; });
+
+  const card = (p) => {
+    const art = el('article', 'tag');
+    const ph = el('div', 'ph' + (p.foto ? '' : ' none'));
+    if (p.foto) {
+      const img = el('img'); img.src = p.foto; img.alt = p.nombre; img.loading = 'lazy';
+      img.addEventListener('click', () => abrirFoto([p.foto], 0, p.nombre));
+      const z = el('button', 'zoom'); z.type = 'button'; z.innerHTML = ZOOM_ICON; z.append(document.createTextNode('Ver completa'));
+      z.addEventListener('click', () => abrirFoto([p.foto], 0, p.nombre));
+      ph.append(img, z);
+    }
+    else { ph.style.setProperty('--tint', tint(p.negocio)); ph.append(el('div', 'ini', p.nombre.split(' ').slice(0, 2).map((w) => w[0]).join('')), el('div', 'msg', 'Pedí fotos reales de la unidad por WhatsApp')); }
+    if (p.ref && p.desde && p.ref > p.desde) { const bd = el('div', 'badge'); bd.setAttribute('aria-label', pct.format(p.ahorro) + (p.meli ? ' menos que en MercadoLibre' : ' de descuento')); bd.append(el('b', null, '−' + pct.format(p.ahorro)), el('small', null, p.meli ? 'vs MeLi' : 'Outlet')); ph.append(bd); }
+    const nReal = p.unidades.filter((u) => u.fotos && u.fotos.length).length;
+    if (nReal && p.foto) ph.append(el('span', 'hasreal', nReal === p.unidades.length ? '📷 Con foto real' : `📷 ${nReal} con foto real`));
+    art.append(ph);
+    const top = el('div', 'top');
+    const c = el('span', 'cat', p.subcat || p.categoria || p.negocio); c.style.background = tint(p.negocio);
+    top.append(c, el('h3', null, p.nombre));
+    const dl = el('dl', 'ficha');
+    for (const [k, v] of [['Rubro', [...new Set([p.negocio, p.categoria].filter(Boolean))].join(' · ')], ['Código', p.sku]]) { if (!v) continue; dl.append(el('dt', null, k), el('dd', null, v)); }
+    top.append(dl);
+    if (p.specs && p.specs.length) { const sp = el('ul', 'specs'); for (const s of p.specs) sp.append(el('li', null, s)); top.append(sp); }
+    art.append(top);
+
+    const pr = el('div', 'price');
+    if (p.desde != null) {
+      const conRef = p.ref && p.ref > p.desde;
+      if (conRef) { const r = el('div', 'ref'); r.append(el('span', 'lbl', p.refLbl), el('span', 'was', ars.format(p.ref))); pr.append(r); }
+      pr.append(el('span', 'now' + (conRef ? ' hot' : ''), (p.precios.filter(Boolean).some((x) => x.valor !== p.desde) ? 'desde ' : '') + ars.format(p.desde)));
+      if (conRef) pr.append(el('span', 'save', 'Ahorrás ' + ars.format(p.ref - p.desde)));
+    } else pr.append(el('span', 'now', 'Consultar'));
+    pr.append(el('span', 'left' + (p.libres ? '' : ' allres'), !p.libres ? 'Reservado' : p.libres === 1 ? 'Queda 1' : `Quedan ${p.libres}`));
+    art.append(pr);
+
+    const ul = el('div', 'units');
+    const abierto = state.abiertos.has(p.sku);
+    const rank = (u) => (u.destino === 'RESERVADO' ? 2 : 0) + (u.fotos?.length ? 0 : 1);
+    const orden = p.unidades.slice().sort((x, y) => rank(x) - rank(y));
+    const visibles = abierto ? orden : orden.slice(0, 2);
+    visibles.forEach((u) => {
+      const i = p.unidades.indexOf(u), precio = p.precios[i];
+      const res = u.destino === 'RESERVADO';
+      const row = el('div', 'unit' + (res ? ' res' : ''));
+      const d = el('div', 'd'); const cb = el('b', null, u.code); if (res) cb.append(el('span', 'rpill', 'Reservada')); d.append(cb, document.createTextNode(u.detalle || 'Sin detalle registrado: consultanos'));
+      const pv = el('div', 'p', precio ? ars.format(precio.valor) : 'Consultar');
+      if (precio && precio.rebaja) pv.append(el('small', null, '−10% por antigüedad'));
+      const meliUrl = p.mla ? `https://articulo.mercadolibre.com.ar/${p.mla.replace('MLA', 'MLA-')}` : '';
+      const msg = (res ? `Hola! Vi que la unidad ${u.code} de ${p.nombre} (${p.sku}) está reservada. Si se libera, me avisás?` : `Hola! Quiero comprar del Outlet: ${p.nombre} (${p.sku}), unidad ${u.code}${precio ? ', precio Outlet ' + ars.format(precio.valor) : ''}. ¿Sigue disponible?`) + (meliUrl ? `\n\nPublicación en MercadoLibre para comparar${p.meli ? ' (' + ars.format(p.meli) + ')' : ''}: ${meliUrl}` : '');
+      const a = el('a', 'wa'); a.href = `https://wa.me/${WA}?text=${encodeURIComponent(msg)}`; a.target = '_blank'; a.rel = 'noopener'; a.innerHTML = WA_ICON; a.append(document.createTextNode(res ? 'Reservada · avisame si se libera' : 'Lo quiero por WhatsApp'));
+      if (!res) a.addEventListener('click', () => reservar(p, u));
+      row.append(d, pv);
+      if (u.fotos && u.fotos.length) {
+        const r = el('button', 'real'); r.type = 'button'; r.innerHTML = CAM_ICON;
+        r.append(document.createTextNode('Ver foto real de esta unidad'));
+        if (u.fotos.length > 1) r.append(el('small', null, `(${u.fotos.length})`));
+        r.addEventListener('click', () => abrirFoto(u.fotos, 0, `${p.nombre} · ${u.code}${u.detalle ? ' · ' + u.detalle : ''}`));
+        row.append(r);
+      }
+      row.append(a); ul.append(row);
+    });
+    if (p.unidades.length > 2) {
+      const b = el('button', 'more', abierto ? 'Ver menos' : `Ver las ${p.unidades.length} unidades`); b.type = 'button';
+      b.addEventListener('click', () => { abierto ? state.abiertos.delete(p.sku) : state.abiertos.add(p.sku); render(); });
+      ul.append(b);
+    }
+    art.append(ul);
+    if (p.mla) { const m = el('a', 'meli', 'Comparar con la publicación de MercadoLibre →'); m.href = `https://articulo.mercadolibre.com.ar/${p.mla.replace('MLA', 'MLA-')}`; m.target = '_blank'; m.rel = 'noopener'; art.append(m); }
+    return art;
+  };
+
+  const render = () => {
+    drawChips();
+    let list = DATA.productos.filter((p) => (!state.negocio || p.negocio === state.negocio) && (!state.q || (p.nombre + ' ' + p.sku + ' ' + p.categoria + ' ' + p.subcat).toLowerCase().includes(state.q)));
+    const by = { nuevo: (a, b) => b.ultimo.localeCompare(a.ultimo), 'precio-asc': (a, b) => (a.desde ?? 1e12) - (b.desde ?? 1e12), 'precio-desc': (a, b) => (b.desde ?? -1) - (a.desde ?? -1), ahorro: (a, b) => b.ahorro - a.ahorro };
+    list = list.slice().sort(by[state.sort]);
+    const grid = document.getElementById('grid'); grid.replaceChildren(...list.map(card));
+    document.getElementById('empty').hidden = list.length > 0;
+    const u = list.reduce((s, p) => s + p.unidades.length, 0);
+    const libres = list.reduce((s, p) => s + p.libres, 0);
+    document.getElementById('count').textContent = `${list.length} ${list.length === 1 ? 'producto' : 'productos'} · ${libres} ${libres === 1 ? 'unidad disponible' : 'unidades disponibles'}` + (VIVO ? ` · stock en vivo ${VIVO_HORA}` : ' · verificando stock…');
+  };
+  // Al tocar "Lo quiero por WhatsApp": reserva automática en la hoja (columna RESERVA WEB, vence sola) y refresco del stock.
+  const reservar = (p, u) => {
+    try { fetch(`${ESTADO_URL}?reservar=${encodeURIComponent(u.code)}&sku=${encodeURIComponent(p.sku)}`, { mode: 'no-cors', keepalive: true }); } catch (e) {}
+    VIVO = VIVO || {}; VIVO[u.code] = { sku: p.sku, destino: 'RESERVADO' };
+    setTimeout(() => { preparar(); render(); }, 600);
+    setTimeout(refrescar, 4000);
+  };
+  const refrescar = async () => {
+    const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 9000);
+    try {
+      const r = await fetch(ESTADO_URL, { signal: ctl.signal, cache: 'no-store' });
+      const j = await r.json();
+      if (!j || !j.estados) throw new Error('sin datos');
+      VIVO = j.estados; VIVO_HORA = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+      preparar(); render();
+    } catch (e) {
+      const c = document.getElementById('count'); c.textContent = c.textContent.replace(' · verificando stock…', '');
+    } finally { clearTimeout(to); }
+  };
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') refrescar(); });
+  render();
+  refrescar();
+</script>
