@@ -2,7 +2,7 @@
 # Lo corre GitHub Actions (.github/workflows/actualizar.yml). Uso local: python3 kit/actualizar.py
 import json, os, sys, subprocess, urllib.request, datetime
 
-API = os.environ.get('OUTLET_API', 'https://script.google.com/macros/s/AKfycbz_3Zus7VkUZukV8YhlMQEdoUbELgquCsBG8xP2dDfrMclk_Q3UVK71oHQfXbsBb07Rhw/exec')
+API = os.environ.get('OUTLET_API', 'https://script.google.com/macros/s/AKfycbzD_LpLNRPwdjtSiUpH85K12ZtoXvieToTr_YtS4KYLJQ--efCcOtHLnr5mJ-aFPPGd4w/exec')
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 KIT = os.path.join(RAIZ, 'kit')
 TMP = os.path.join(RAIZ, '.tmp')
