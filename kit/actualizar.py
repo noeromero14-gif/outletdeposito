@@ -10,7 +10,13 @@ os.makedirs(TMP, exist_ok=True)
 
 def get(q):
     with urllib.request.urlopen(API + q, timeout=120) as r:
-        return json.loads(r.read().decode('utf-8'))
+        txt = r.read().decode('utf-8', 'replace')
+    try:
+        return json.loads(txt)
+    except ValueError:
+        import re, html
+        limpio = html.unescape(re.sub(r'<[^>]+>', ' ', txt))
+        sys.exit('El script de la planilla no devolvió datos (' + q + '): ' + ' '.join(limpio.split())[:600])
 
 def guardar(nombre, valores):
     p = os.path.join(TMP, nombre)
