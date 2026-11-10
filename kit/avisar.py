@@ -10,7 +10,7 @@ sin = set(rep.get('sin_foto', []))
 nuevos = sorted(sin - avisados)
 if nuevos:
     lineas = '\n'.join(f"- **{cat.get(s, {}).get('nombre', s)}** (SKU {s})" for s in nuevos)
-    cuerpo = ("Estos productos del Outlet se publicaron sin foto de catálogo y se ven con el recuadro gris en la página:\n\n"
+    cuerpo = ("@noeromero14-gif estos productos del Outlet se publicaron sin foto de catálogo y se ven con el recuadro gris en la página:\n\n"
               + lineas + "\n\nPasale las fotos a Claude en la conversación del Outlet y las carga.\n\nhttps://noeromero14-gif.github.io/outletdeposito/")
     hoy = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=-3))).strftime('%d/%m %H:%M')
     subprocess.run(['gh', 'issue', 'create', '--title', f'Faltan fotos de catálogo ({len(nuevos)}) — {hoy}', '--body', cuerpo], check=True)
