@@ -274,7 +274,7 @@
       z.addEventListener('click', () => abrirFoto([p.foto], 0, p.nombre));
       ph.append(img, z);
     }
-    else { ph.style.setProperty('--tint', tint(p.negocio)); ph.append(el('div', 'ini', p.nombre.split(' ').slice(0, 2).map((w) => w[0]).join('')), el('div', 'msg', 'Pedí fotos reales de la unidad por WhatsApp')); }
+    else { ph.style.setProperty('--tint', tint(p.negocio)); ph.append(el('div', 'ini', p.nombre.split(' ').slice(0, 2).map((w) => w[0]).join('')), el('div', 'msg', 'Foto próximamente')); }
     if (p.ref && p.desde && p.ref > p.desde) { const bd = el('div', 'badge'); bd.setAttribute('aria-label', pct.format(p.ahorro) + (p.meli ? ' menos que en MercadoLibre' : ' de descuento')); bd.append(el('b', null, '−' + pct.format(p.ahorro)), el('small', null, p.meli ? 'vs MeLi' : 'Outlet')); ph.append(bd); }
     const nReal = p.unidades.filter((u) => u.fotos && u.fotos.length).length;
     if (nReal && p.foto) ph.append(el('span', 'hasreal', nReal === p.unidades.length ? '📷 Con foto real' : `📷 ${nReal} con foto real`));

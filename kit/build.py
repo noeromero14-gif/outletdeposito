@@ -63,7 +63,7 @@ for sku, us in units.items():
     if iv and iv['costo'] > 0: p['costo'] = iv['costo']          # COSTO FINAL, live
     if not p.get('costo'): sin_costo.append(sku); continue
     p['lista'] = None if p.get('meli') else round(p['costo'] / 0.6 / 100) * 100
-    p['unidades'] = us; p['foto'] = fotos.get(sku) or next((u['fotos'][0] for u in us if u['fotos']), None)   # sin foto de catálogo: usa la primera foto real
+    p['unidades'] = us; p['foto'] = fotos.get(sku)   # sin foto de catálogo: queda el recuadro gris hasta que se cargue
     prods.append(p)
 
 json.dump(cat, open(os.path.join(kit, 'catalog.json'), 'w'), ensure_ascii=False)

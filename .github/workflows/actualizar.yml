@@ -8,6 +8,7 @@ on:
 permissions:
   contents: write
   pages: write
+  issues: write
 
 concurrency:
   group: actualizar-outlet
@@ -23,13 +24,17 @@ jobs:
           python-version: '3.12'
       - run: pip install pillow
       - run: python3 kit/actualizar.py
+      - name: Avisar productos sin foto de catálogo
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 kit/avisar.py
       - name: Publicar si hay cambios
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "Claude"
           git config user.email "noreply@anthropic.com"
-          git add index.html reales kit/catalog.json kit/reales.json
+          git add index.html reales kit/catalog.json kit/reales.json kit/avisos.json
           if git diff --cached --quiet; then
             echo "Sin cambios."
           else
